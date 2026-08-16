@@ -26,8 +26,8 @@ def handle_deprecated_rsl_rl_cfg(agent_cfg: RslRlBaseRunnerCfg, installed_versio
 
     - For ``rsl-rl < 4.0.0``, ``policy`` is required; new model configs (``actor``, ``critic``, ``student``,
         ``teacher``) are ignored and cleared.
-    - For ``rsl-rl >= 4.0.0``, deprecated ``policy`` can be used to infer missing model configs, then ``policy`` is
-        cleared.
+    - For ``rsl-rl >= 4.0.0``, missing ``obs_groups`` is migrated to an empty mapping so RSL-RL can resolve
+        observation sets from the environment, and deprecated ``policy`` can be used to infer missing model configs.
     - For ``rsl-rl >= 5.0.0``, legacy stochastic parameters are migrated to ``distribution_cfg`` when needed; for
         ``4.0.0 <= rsl-rl < 5.0.0``, those legacy parameters are validated instead.
 
@@ -67,6 +67,15 @@ def handle_deprecated_rsl_rl_cfg(agent_cfg: RslRlBaseRunnerCfg, installed_versio
 
     # Handle configurations for rsl-rl >= 4.0.0
     else:
+        # RSL-RL 4+ expects a mapping. An empty mapping deliberately delegates default-set resolution
+        # to rsl_rl.utils.resolve_obs_groups(), which prefers same-named groups and falls back to "policy".
+        if hasattr(agent_cfg, "obs_groups") and _is_missing(agent_cfg.obs_groups):
+            print(
+                "[WARNING]: The `obs_groups` configuration is missing for rsl-rl >= 4.0.0. Default observation"
+                " groups will be resolved from the environment. Consider configuring `obs_groups` explicitly."
+            )
+            agent_cfg.obs_groups = {}
+
         # Handle deprecated policy configuration
         if _has_non_missing_attr(agent_cfg, "policy"):
             print(
