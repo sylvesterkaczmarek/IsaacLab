@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import math
+from collections.abc import Callable
 from math import pi as PI
 
 import numpy as np
@@ -1258,3 +1259,29 @@ def test_apply_delta_pose_zero_rotation_gradients():
     torch.testing.assert_close(target_rot, source_rot)
     (target_pos.sum() + target_rot.sum()).backward()
     assert torch.isfinite(delta.grad).all()
+
+
+@pytest.mark.kitless
+@pytest.mark.parametrize(
+    "sampler", [math_utils.sample_uniform, math_utils.sample_triangle, math_utils.sample_log_uniform]
+)
+@pytest.mark.parametrize("size", [(), 3, (2, 3), (0,)])
+def test_sampler_shape_and_bounds(
+    sampler: Callable[[float, float, int | tuple[int, ...], str], torch.Tensor], size: int | tuple[int, ...]
+) -> None:
+    expected_shape = (size,) if isinstance(size, int) else size
+    result = sampler(1.0, 4.0, size, "cpu")
+    assert result.shape == expected_shape
+    assert torch.all(result >= 1.0)
+    assert torch.all(result <= 4.0)
+
+
+@pytest.mark.kitless
+@pytest.mark.parametrize(
+    "sampler", [math_utils.sample_uniform, math_utils.sample_triangle, math_utils.sample_log_uniform]
+)
+def test_scalar_sampler_fixed_bounds(
+    sampler: Callable[[float, float, int | tuple[int, ...], str], torch.Tensor],
+) -> None:
+    result = sampler(2.0, 2.0, (), "cpu")
+    torch.testing.assert_close(result, torch.tensor(2.0))
