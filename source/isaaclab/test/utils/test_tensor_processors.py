@@ -226,3 +226,21 @@ def test_stateful_tensor_processor_mask_reset(cfg, first, third):
     output = processor(data)
 
     torch.testing.assert_close(output, torch.tensor([first, third, first])[:, None].expand(3, 2))
+
+@pytest.mark.parametrize("device", test_devices())
+def test_digital_filter_without_feedback(device):
+    cfg = tensor_processors.DigitalFilterCfg(A=[], B=[0.5, 0.5])
+    processor = cfg.func(cfg, (2,), device=device)
+    data = torch.tensor([2.0, 4.0], device=device)
+    torch.testing.assert_close(processor(data), data / 2)
+    torch.testing.assert_close(processor(data), data)
+    processor.reset(env_ids=[0])
+    torch.testing.assert_close(processor(data), torch.tensor([1.0, 4.0], device=device))
+    processor.reset()
+    torch.testing.assert_close(processor(data), data / 2)
+
+
+def test_digital_filter_rejects_empty_input_coefficients():
+    cfg = tensor_processors.DigitalFilterCfg(A=[], B=[])
+    with pytest.raises(ValueError, match="B must contain at least one"):
+        cfg.func(cfg, (2,), device="cpu")

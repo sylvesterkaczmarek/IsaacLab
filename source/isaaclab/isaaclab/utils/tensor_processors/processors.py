@@ -140,11 +140,14 @@ class DigitalFilter(TensorProcessor):
             device: The device to run the processor on.
 
         Raises:
-            ValueError: If filter coefficients are None.
+            ValueError: If filter coefficients are None or B is empty.
         """
         # check that filter coefficients are not None
         if cfg.A is None or cfg.B is None:
             raise ValueError("Digital filter coefficients A and B must not be None. Please provide valid coefficients.")
+
+        if not cfg.B:
+            raise ValueError("Digital filter coefficients B must contain at least one coefficient.")
 
         # initialize parent class
         super().__init__(cfg, data_dim, device)
@@ -188,9 +191,10 @@ class DigitalFilter(TensorProcessor):
         y_i = torch.matmul(self.x_n, self.B) - torch.matmul(self.y_n, self.A)
         y_i.squeeze_(-1)
 
-        # move history window for output and add current filter value to history
-        self.y_n = torch.roll(self.y_n, shifts=1, dims=-1)
-        self.y_n[..., 0] = y_i
+        # FIR filters have no output history when A is empty.
+        if self.A.shape[0] > 0:
+            self.y_n = torch.roll(self.y_n, shifts=1, dims=-1)
+            self.y_n[..., 0] = y_i
 
         return y_i
 

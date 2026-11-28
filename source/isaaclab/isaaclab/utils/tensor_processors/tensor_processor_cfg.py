@@ -67,7 +67,8 @@ class DigitalFilterCfg(TensorProcessorCfg):
     for the output at the previous time step, the second element is the coefficient for the output at two
     time steps ago, and so on.
 
-    It is the denominator coefficients of the transfer function of the filter.
+    It is the denominator coefficients of the transfer function of the filter. An empty list
+    represents a finite impulse response filter with no feedback.
     """
 
     B: list[float] = MISSING
@@ -77,7 +78,7 @@ class DigitalFilterCfg(TensorProcessorCfg):
     coefficient for the current input, the second element is the coefficient for the input at the previous
     time step, and so on.
 
-    It is the numerator coefficients of the transfer function of the filter.
+    It is the numerator coefficients of the transfer function of the filter. At least one coefficient is required.
     """
 
 
