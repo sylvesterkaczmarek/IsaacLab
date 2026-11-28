@@ -148,11 +148,10 @@ def test_is_identity_pose(device):
     assert math_utils.is_identity_pose(identity_pos, identity_rot) is True
     assert math_utils.is_identity_pose(identity_pos[0], -identity_rot[0]) is True
     # A negative scalar component alone is not sufficient for identity.
-    invalid_rot = identity_rot.clone()
-    invalid_rot[1] = torch.tensor([0.0, 0.0, 0.0, -2.0], device=device)
-    assert math_utils.is_identity_pose(identity_pos, invalid_rot) is False
-    invalid_rot[1] = torch.tensor([0.0, 1.0, 0.0, 0.0], device=device)
-    assert math_utils.is_identity_pose(identity_pos, invalid_rot) is False
+    identity_rot[1] = torch.tensor([0.0, 0.0, 0.0, -2.0], device=device)
+    assert math_utils.is_identity_pose(identity_pos, identity_rot) is False
+    identity_rot[1] = torch.tensor([0.0, 1.0, 0.0, 0.0], device=device)
+    assert math_utils.is_identity_pose(identity_pos, identity_rot) is False
 
     # Modified multi-row pose (not identity)
     identity_pos = torch.tensor([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], device=device)
