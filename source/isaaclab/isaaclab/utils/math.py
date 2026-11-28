@@ -1496,8 +1496,7 @@ def sample_gaussian(
         size = (size,)
     mean = torch.as_tensor(mean, device=device)
     std = torch.as_tensor(std, device=device)
-    # torch.normal requires floating-point parameters. Integer-valued means and
-    # standard deviations are valid real numbers, including integer literals.
+    # torch.normal requires floating-point parameters.
     if not (mean.is_floating_point() or mean.is_complex()):
         mean = mean.to(dtype=std.dtype if std.is_floating_point() else torch.get_default_dtype())
     if not (std.is_floating_point() or std.is_complex()):
