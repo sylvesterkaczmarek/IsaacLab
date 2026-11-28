@@ -73,8 +73,9 @@ class TensorProcessorTestCfg:
         (tensor_processors.clip, {"bounds": (1.5, 2.5)}, [1.5, 2.0, 2.5]),
         (tensor_processors.clip, {"bounds": (1.5, None)}, [1.5, 2.0, 3.0]),
         (tensor_processors.clip, {"bounds": (None, 2.5)}, [1.0, 2.0, 2.5]),
+        (tensor_processors.clip, {"bounds": (None, None)}, [1.0, 2.0, 3.0]),
     ],
-    ids=["scale", "bias", "clip", "clip_no_upper_bound", "clip_no_lower_bound"],
+    ids=["scale", "bias", "clip", "clip_no_upper_bound", "clip_no_lower_bound", "clip_no_bounds"],
 )
 def test_stateless_tensor_processors(func, params, result):
     """Test the stateless scale, bias, and clip tensor processors."""
@@ -226,3 +227,12 @@ def test_stateful_tensor_processor_mask_reset(cfg, first, third):
     output = processor(data)
 
     torch.testing.assert_close(output, torch.tensor([first, third, first])[:, None].expand(3, 2))
+
+@pytest.mark.parametrize("device", test_devices())
+def test_unbounded_clip_preserves_data_and_gradient(device):
+    data = torch.tensor([1.0, -2.0, 3.0], device=device, requires_grad=True)
+    result = tensor_processors.clip(data, (None, None))
+    torch.testing.assert_close(result, data)
+    assert result.data_ptr() != data.data_ptr()
+    result.sum().backward()
+    torch.testing.assert_close(data.grad, torch.ones_like(data))

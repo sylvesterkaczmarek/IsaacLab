@@ -41,11 +41,14 @@ def clip(data: torch.Tensor, bounds: tuple[float | None, float | None]) -> torch
     Args:
         data: The data to apply the clip to.
         bounds: A tuple containing the minimum and maximum values to clip data to.
-            If the value is None, that bound is not applied.
+            If the value is None, that bound is not applied. If both bounds are None,
+            return an unchanged copy of the data.
 
     Returns:
         Clipped data. Shape is the same as data.
     """
+    if bounds[0] is None and bounds[1] is None:
+        return data.clone()
     return data.clip(min=bounds[0], max=bounds[1])
 
 
