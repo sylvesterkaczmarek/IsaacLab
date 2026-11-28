@@ -140,10 +140,14 @@ def normalize_depth(
         A new float image; metric [m] unless a rescaling is selected.
 
     Raises:
-        ValueError: If both ``max_depth`` and ``tanh_scale`` are set.
+        ValueError: If both rescalings are set, or the selected scale is not finite and positive.
     """
     if max_depth is not None and tanh_scale is not None:
         raise ValueError("Set at most one of max_depth and tanh_scale.")
+    if max_depth is not None and (not isfinite(max_depth) or max_depth <= 0.0):
+        raise ValueError("max_depth must be finite and positive.")
+    if tanh_scale is not None and (not isfinite(tanh_scale) or tanh_scale <= 0.0):
+        raise ValueError("tanh_scale must be finite and positive.")
     images = torch.nan_to_num(images, nan=invalid_value, posinf=invalid_value, neginf=invalid_value)
     if max_depth is not None:
         images.clamp_(max=max_depth).div_(max_depth)

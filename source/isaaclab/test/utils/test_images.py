@@ -226,6 +226,18 @@ class TestNormalizeDepth:
         torch.testing.assert_close(out, torch.tensor([-0.5, math.tanh(1.0) - 0.5, 0.5], device=device))
 
     @cpu_only
+    @pytest.mark.parametrize("name", ["max_depth", "tanh_scale"])
+    @pytest.mark.parametrize("scale", [0.0, -1.0, float("inf"), -float("inf"), float("nan")])
+    def test_rejects_invalid_rescaling(self, device, name, scale):
+        from isaaclab.utils.images import normalize_depth
+
+        src = torch.tensor([0.0, 1.0], device=device)
+        original = src.clone()
+        with pytest.raises(ValueError, match=f"{name} must be finite and positive"):
+            normalize_depth(src, **{name: scale})
+        torch.testing.assert_close(src, original)
+
+    @cpu_only
     def test_rejects_both_rescalings(self, device):
         from isaaclab.utils.images import normalize_depth
 
